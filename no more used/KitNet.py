@@ -232,7 +232,7 @@ def test () :
             output =pool.starmap(dataset_test, [(merlin_score,best_params,time_taken,all_identified,key,idx,dataset) for idx,dataset in enumerate(base["Dataset"])  ] )
         
 
-        print(output[0])
+        print('KitNet Output', output[0])
         """print(len(output))
         
         base[key+"_identified"] = all_identified

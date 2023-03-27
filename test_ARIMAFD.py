@@ -1,27 +1,27 @@
 # Import modules.
-from sklearn.utils import shuffle
+# from sklearn.utils import shuffle
 #from pysad.evaluation import AUROCMetric
 import numpy as np
-from sklearn.utils import shuffle
+# from sklearn.utils import shuffle
 
-from river import drift
+# from river import drift
 import plotly.graph_objects as go
 import pandas as pd
 import matplotlib.pyplot as plt
 import time
 import os 
-from hyperopt import fmin, tpe,hp, STATUS_OK, Trials
-from numba import jit, cuda
+from hyperopt import fmin, tpe,hp, Trials
+# from numba import jit, cuda
 import code
 #code.interact(local=locals)
 import time
 import os
-import numba  # We added these two lines for a 500x speedup
-from numba import njit, types
-from numba.extending import overload, register_jitable
-from numba.core.errors import TypingError
-from score_nab import evaluating_change_point
-from arimafd import *
+# import numba  # We added these two lines for a 500x speedup
+# from numba import njit, types
+# from numba.extending import overload, register_jitable
+# from numba.core.errors import TypingError
+# from score_nab import evaluating_change_point
+# from arimafd import *
 from base_model import BaseModel
 class class_ARIMAFD(BaseModel):
     """This class represent te model Online ARIMA 

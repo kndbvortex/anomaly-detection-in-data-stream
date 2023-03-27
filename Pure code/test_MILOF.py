@@ -94,9 +94,9 @@ def MILOF(X):
   LOF ne tient pas en compte les concentrations de points identiques sinon on tombe à un problème d'infini
   """
   import math
-  % cd MILOF/lib
+  os.chdir('MILOF/lib')
   from MiLOF import MILOF
-  % cd test
+  os.chdir('test')
   scipy.io.savemat('testdata/testdata.mat', mdict={'DataStream': np.array(X)})
   parameters= """[Parser] 
   InputBPFile = testdata/tau-metrics-cached-validated/tau-metrics.bp 
@@ -128,7 +128,7 @@ def MILOF(X):
   for idx, x in enumerate(X):
     indices = [i for i, a in enumerate(X_unique.tolist()) if x == a]
     real_scores[idx]=scores[indices[0]]/maxi
-  % cd ....
+  os.chdir('....')
   return real_scores 
 
 
@@ -295,10 +295,6 @@ def test () :
             base[key+"time_taken"] = time_taken
             #base[key+"_threshold"]=thresholds
             base.to_excel("point_methods_result.xlsx")
-            
-
-
-test()
 
 
 def overlapping_merlin(identified, expected,gap):
@@ -308,3 +304,7 @@ def overlapping_merlin(identified, expected,gap):
       score+=1
 
   return score/len(expected)
+
+
+if __name__=='__main__':
+    test()

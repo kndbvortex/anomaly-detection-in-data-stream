@@ -1,10 +1,10 @@
 import scipy.io
-from river import drift
+# from river import drift
 import plotly.graph_objects as go
 import pandas as pd
 import matplotlib.pyplot as plt
 import os 
-from hyperopt import fmin, tpe,hp, STATUS_OK, Trials
+from hyperopt import fmin, tpe,hp, Trials
 import numpy as np
 import matrixprofile as mp
 import time
