@@ -18,81 +18,83 @@ from datetime import datetime
 
 
 def distance(a, b):
-    x = a
-    y = b
-    # ******songer à tester sans la distance normale ajoutée  pour voir l plus de la distance proposée
-    return np.linalg.norm(a - b)*math.sqrt(2*len(x)*(1-np.corrcoef(x, y)[0][1]))
+	x = a
+	y = b
+	# ******songer à tester sans la distance normale ajoutée  pour voir l plus de la distance proposée
+	return np.linalg.norm(a - b)*math.sqrt(2*len(x)*(1-np.corrcoef(x, y)[0][1]))
 
 
 def z_norm_dist(x, y):
-    # ******songer à tester sans la distance normale ajoutée  pour voir l plus de la distance proposée
-    return np.linalg.norm(x - y)*math.sqrt(2*len(x)*(1-np.corrcoef(x, y)[0][1]))
+	# ******songer à tester sans la distance normale ajoutée  pour voir l plus de la distance proposée
+	return np.linalg.norm(x - y)*math.sqrt(2*len(x)*(1-np.corrcoef(x, y)[0][1]))
 
 
 class Cluster:
-    def __init__(self, subsequence, radius, max_clusters):
-        self.radius = radius
-        self.nb_clustroid = 4
-        self.outliers = []
-        self.clusters = [[subsequence]]
-        self.clusters_activity = [datetime.now()]
-        self.max_clusters = max_clusters
+	def __init__(self, subsequence, radius, max_clusters):
+		self.radius = radius
+		self.nb_clustroid = 4
+		self.outliers = []
+		self.clusters = [[subsequence]]
+		self.clusters_activity = [datetime.now()]
+		self.max_clusters = max_clusters
 
-    def add_cluster(self, subsequence):
-        if len(self.clusters) > self.max_clusters:
-            min_index = self.clusters_activity.index(min(self.clusters_activity))
-            print(f"{'*'*10}This is the cluster that had the lowest activity", min_index, self.clusters_activity)
-            self.clusters_activity.pop(min_index)
-            self.clusters.pop(min_index)
+	def add_cluster(self, subsequence):
+		if len(self.clusters) > self.max_clusters:
+			min_index = self.clusters_activity.index(min(self.clusters_activity))
+			print(f"{'*'*10}This is the cluster that had the lowest activity",
+				  min_index, self.clusters_activity)
+			self.clusters_activity.pop(min_index)
+			self.clusters.pop(min_index)
 
-        self.clusters_activity.append(datetime.now())
-        self.clusters.append([subsequence])
+		self.clusters_activity.append(datetime.now())
+		self.clusters.append([subsequence])
 
 
 def clustering(Cluster, r, subsequence):
-    dist = r
-    min_dist = float('inf')
-    cluster_id = False
-    there_is_a_cluster = False
-    # try to identify its cluster
-    for id_cluster, cluster in enumerate(Cluster.clusters):
-        for clustroid in cluster:
-            if d:=z_norm_dist(clustroid, subsequence) < dist:
-                print("********************************, it entered a cluster")
-                if d < min_dist:
-                    min_dist = d
-                    cluster_id = id_cluster
-                # try to know if it can be the centroid
-    """if min_dist >r and cluster_id!=False:
+	dist = r
+	min_dist = float('inf')
+	cluster_id = False
+	there_is_a_cluster = False
+	# try to identify its cluster
+	for id_cluster, cluster in enumerate(Cluster.clusters):
+		for clustroid in cluster:
+			if d := z_norm_dist(clustroid, subsequence) < dist:
+				print("********************************, it entered a cluster")
+				if d < min_dist:
+					min_dist = d
+					cluster_id = id_cluster
+				# try to know if it can be the centroid
+	"""if min_dist >r and cluster_id!=False:
 		print("Rien fait: Cette partie est délicate car on essaie d'optimiser le rayon du cluster")
-		# on fait un clustering hierarchique pour garder un certain rayon dans notre algorithme de clustering 
+		# on fait un clustering hierarchique pour garder un certain rayon dans notre algorithme de clustering
 	"""
-    # try to know if it can be the centroid
-    if cluster_id != False:
-        Cluster.clusters_activity[cluster_id] = datetime.now()
+	# try to know if it can be the centroid
+	if cluster_id != False:
+		Cluster.clusters_activity[cluster_id] = datetime.now()
 
-        print("********************Ajout à un cluster", cluster_id, np.array(Cluster.clusters).shape)
-        
-        if len(Cluster.clusters[cluster_id]) < Cluster.nb_clustroid and not any(np.array_equal(subsequence, i) for i in Cluster.clusters[cluster_id]):
-            Cluster.clusters[cluster_id].append(subsequence)
+		print("********************Ajout à un cluster",
+			  cluster_id, np.array(Cluster.clusters).shape)
 
-        elif any(np.array_equal(subsequence, i) for i in Cluster.clusters[cluster_id]):
-            # print("**** il avait deja son jumeau")
-            return True
-        else:
-            # print("******************** il vient remplacer un clustroid")
-            # if there is a subsequence which is too near another subsequence, we can remove it . we can do it because l'inégalité triangulaire est vérifiée
-            dist_matrice = np.array([
+		if len(Cluster.clusters[cluster_id]) < Cluster.nb_clustroid and not any(np.array_equal(subsequence, i) for i in Cluster.clusters[cluster_id]):
+			Cluster.clusters[cluster_id].append(subsequence)
+
+		elif any(np.array_equal(subsequence, i) for i in Cluster.clusters[cluster_id]):
+			# print("**** il avait deja son jumeau")
+			return True
+		else:
+			# print("******************** il vient remplacer un clustroid")
+			# if there is a subsequence which is too near another subsequence, we can remove it . we can do it because l'inégalité triangulaire est vérifiée
+			dist_matrice = np.array([
 				[z_norm_dist(i, j) for i in Cluster.clusters[cluster_id]] for j in Cluster.clusters[cluster_id]
-            ])
-            min_dist = dist_matrice[dist_matrice != 0].min()
-            ij_min = np.where(dist_matrice == min_dist)[0]
-            ij_min = tuple([i.item() for i in ij_min])
-            if dist > min_dist:
-                Cluster.clusters[cluster_id][ij_min[0]] = subsequence
-        return True
-    else:
-        return False
+			])
+			min_dist = dist_matrice[dist_matrice != 0].min()
+			ij_min = np.where(dist_matrice == min_dist)[0]
+			ij_min = tuple([i.item() for i in ij_min])
+			if dist > min_dist:
+				Cluster.clusters[cluster_id][ij_min[0]] = subsequence
+		return True
+	else:
+		return False
 
 
 def stream_discord(T, w, r, training, max_clusters):
@@ -102,12 +104,13 @@ def stream_discord(T, w, r, training, max_clusters):
 		T (_type_): Dataset in this case the column
 		w (_type_): windows size
 		r (_type_): Threshold value
-		training (_type_): 
+		training (_type_):
 		max_clusters (_type_): Maximum size of a cluster
 
 	Returns:
 		_type_: _description_
 	"""
+	
 	S = [*range(0, len(T), int(w/2))]
 	to_remove = []
 	for idx, s in enumerate(S):
@@ -171,13 +174,13 @@ def stream_discord(T, w, r, training, max_clusters):
 
 
 def check(indice, real_indices, gap):
-    Flag = True
-    for real_indice in real_indices:
-        # print(indice, [*range(real_indice-gap,real_indice+gap)])
-        search = np.arange(real_indice, real_indice+gap)
-        if indice in search:
-            Flag = False
-    return Flag
+	Flag = True
+	for real_indice in real_indices:
+		# print(indice, [*range(real_indice-gap,real_indice+gap)])
+		search = np.arange(real_indice, real_indice+gap)
+		if indice in search:
+			Flag = False
+	return Flag
 
 
 """def score_to_label(nbr_anomalies,scores,gap):
@@ -209,82 +212,82 @@ def check(indice, real_indices, gap):
 
 
 class class_our:
-    
-    def __init__(self):
-        # self.nbr_anomalies= nbr_anomalies
-        print("ok")
+	
+	def __init__(self):
+		# self.nbr_anomalies= nbr_anomalies
+		print("ok")
 
-    def test(dataset, X, right, nbr_anomalies, gap, scoring_metric="merlin"):
+	def test(dataset, X, right, nbr_anomalies, gap, scoring_metric="merlin"):
 
-        def our(X, w, r, training, cluster):
-            # X should be a one dimensional vector
-            _, _, scores, clust = stream_discord(X, w, r, training, cluster)
-            print("*********nbr of clusters", np.array(clust.clusters).shape)
-            return scores
+		def our(X, w, r, training, cluster):
+			# X should be a one dimensional vector
+			_, _, scores, clust = stream_discord(X, w, r, training, cluster)
+			print("*********nbr of clusters", np.array(clust.clusters).shape)
+			return scores
 
-            # right=[387,948,1485]
-            # nbr_anomalies=3
+			# right=[387,948,1485]
+			# nbr_anomalies=3
 
-        def scoring(scores):
-            identified = np.where(scores.squeeze() == 1)[0]
-            sub_identified = np.array([])
-            sub_right = np.array([])
-            for identify in identified:
-                sub_identified = np.concatenate(
-                    [sub_identified, np.arange(identify, identify+gap)])
-            for identify in right:
-                identify = int(identify)
-                sub_right = np.concatenate(
-                    [sub_right, np.arange(identify, identify+gap)])
-            sub_identified = np.unique(sub_identified)
-            sub_right = np.unique(sub_right)
-            recall = len(np.intersect1d(
-                sub_identified, sub_right))/len(sub_right)
-            precision = len(np.intersect1d(
-                sub_identified, sub_right))/len(sub_identified)
-            try:
-                score = 2*(recall*precision)/(recall+precision)
-            except:
-                score = 0.0
-            return score
+		def scoring(scores):
+			identified = np.where(scores.squeeze() == 1)[0]
+			sub_identified = np.array([])
+			sub_right = np.array([])
+			for identify in identified:
+				sub_identified = np.concatenate(
+					[sub_identified, np.arange(identify, identify+gap)])
+			for identify in right:
+				identify = int(identify)
+				sub_right = np.concatenate(
+					[sub_right, np.arange(identify, identify+gap)])
+			sub_identified = np.unique(sub_identified)
+			sub_right = np.unique(sub_right)
+			recall = len(np.intersect1d(
+				sub_identified, sub_right))/len(sub_right)
+			precision = len(np.intersect1d(
+				sub_identified, sub_right))/len(sub_identified)
+			try:
+				score = 2*(recall*precision)/(recall+precision)
+			except:
+				score = 0.0
+			return score
 
-        def score_to_label(nbr_anomalies, scores, gap):
+		def score_to_label(nbr_anomalies, scores, gap):
 
-            thresholds = np.unique(scores)
-            f1_scores = []
-            for threshold in thresholds:
-                labels = np.where(scores < threshold, 0, 1)
-                f1_scores.append(scoring(labels))
-            q = list(zip(f1_scores, thresholds))
-            thres = sorted(q, reverse=True, key=lambda x: x[0])[0][1]
-            threshold = thres
-            arg = np.where(thresholds == thres)
+			thresholds = np.unique(scores)
+			f1_scores = []
+			for threshold in thresholds:
+				labels = np.where(scores < threshold, 0, 1)
+				f1_scores.append(scoring(labels))
+			q = list(zip(f1_scores, thresholds))
+			thres = sorted(q, reverse=True, key=lambda x: x[0])[0][1]
+			threshold = thres
+			arg = np.where(thresholds == thres)
 
-            # i will throw only real_indices here. [0 if i<threshold else 1 for i in scores ]
-            return np.where(scores < threshold, 0, 1)
+			# i will throw only real_indices here. [0 if i<threshold else 1 for i in scores ]
+			return np.where(scores < threshold, 0, 1)
 
-        def objective(args):
-            print(args)
-            scores = our(X, w=args["window"], r=args["threshold"],
-                         training=args["training"], cluster=args["cluster"])
-            scores = score_to_label(nbr_anomalies, scores, gap)
-            # scoring(scores)#{'loss': 1/1+score, 'status': STATUS_OK}
-            return 1/(1+scoring(scores))
+		def objective(args):
+			print(args)
+			scores = our(X, w=args["window"], r=args["threshold"],
+						 training=args["training"], cluster=args["cluster"])
+			scores = score_to_label(nbr_anomalies, scores, gap)
+			# scoring(scores)#{'loss': 1/1+score, 'status': STATUS_OK}
+			return 1/(1+scoring(scores))
 
-        possible_window = np.array([gap, gap])  # arange(100,gap+200)
-        possible_threshold = np.arange(1, 10, 0.5)
-        right_discord = [int(discord) for discord in right]
-        possible_training = np.arange(1, min(min(right_discord), int(len(X)/4)))
-        possible_cluster = np.arange(10, 30)
-        space2 = {
-            "training": hp.choice("training_index", possible_training),
-            "window": hp.choice("window_index", possible_window),
-            "threshold": hp.choice("threshold_index", possible_threshold),
-            "cluster": hp.choice("cluster_index", possible_cluster)
-        }
-        trials = Trials()
+		possible_window = np.array([gap, gap])  # arange(100,gap+200)
+		possible_threshold = np.arange(1, 10, 0.5)
+		right_discord = [int(discord) for discord in right]
+		possible_training = np.arange(1, min(min(right_discord), int(len(X)/4)))
+		possible_cluster = np.arange(10, 30)
+		space2 = {
+			"training": hp.choice("training_index", possible_training),
+			"window": hp.choice("window_index", possible_window),
+			"threshold": hp.choice("threshold_index", possible_threshold),
+			"cluster": hp.choice("cluster_index", possible_cluster)
+		}
+		trials = Trials()
 
-        """best = fmin(fn=objective,space=space2, algo=tpe.suggest, max_evals=30,trials = trials)
+		"""best = fmin(fn=objective,space=space2, algo=tpe.suggest, max_evals=30,trials = trials)
 		#print(best)
 		start =time.monotonic()
 		real_scores= our(X,w=possible_window[best["window_index"]], r=possible_threshold[best["threshold_index"]]
@@ -298,16 +301,16 @@ class class_our:
 		print("*********identified",identified)
 		return real_scores, scores_label, identified,scoring(scores_label), best_param, end-start"""
 
-        start = time.monotonic()
+		start = time.monotonic()
 
-        best = fmin(fn=objective, space=space2, algo=tpe.suggest, max_evals=1, trials=trials)
-        # print(best)
-        end = time.monotonic()
-        best_param = {
-            "cluster": possible_cluster[best["cluster_index"]],
-            "training": possible_training[best["training_index"]],
-            "window": possible_window[best["window_index"]],
-            'threshold': possible_threshold[best["threshold_index"]]
-        }
+		best = fmin(fn=objective, space=space2, algo=tpe.suggest, max_evals=1, trials=trials)
+		# print(best)
+		end = time.monotonic()
+		best_param = {
+			"cluster": possible_cluster[best["cluster_index"]],
+			"training": possible_training[best["training_index"]],
+			"window": possible_window[best["window_index"]],
+			'threshold': possible_threshold[best["threshold_index"]]
+		}
 		
-        return np.zeros(len(X)), np.zeros(len(X)), [], 0, best_param, end-start
+		return np.zeros(len(X)), np.zeros(len(X)), [], 0, best_param, end-start

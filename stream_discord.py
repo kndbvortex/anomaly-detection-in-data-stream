@@ -79,6 +79,7 @@ def clustering(Cluster, r, subsequence):
 
 
 def stream_discord(T, w, r):
+    
     S = [*range(0, len(T), int(w/2))]
     to_remove = []
     for idx, s in enumerate(S):
