@@ -98,8 +98,7 @@ def stream_discord(T, w, r):
         min_dist_if_discord = float('inf')
         for c in C:
             # print(s,"*",s+w,"**",len(T))
-            min_dist_if_discord = min(
-                min_dist_if_discord, distance(T[s:s+w], T[c:c+w]))
+            min_dist_if_discord = min(min_dist_if_discord, distance(T[s:s+w], T[c:c+w]))
             C_score[c] = min(C_score[c], distance(T[s:s+w], T[c:c+w]))
             if distance(T[s:s+w], T[c:c+w]) < r:
                 # print([s])

@@ -41,13 +41,13 @@ class Cluster:
 	def add_cluster(self, subsequence):
 		if len(self.clusters) > self.max_clusters:
 			min_index = self.clusters_activity.index(min(self.clusters_activity))
-			print(f"{'*'*10}This is the cluster that had the lowest activity",
-				  min_index, self.clusters_activity)
+			print(f"{'*'*10}This is the cluster that had the lowest activity", min_index, self.clusters_activity)
 			self.clusters_activity.pop(min_index)
 			self.clusters.pop(min_index)
 
 		self.clusters_activity.append(datetime.now())
 		self.clusters.append([subsequence])
+  
 
 
 def clustering(Cluster, r, subsequence):
@@ -72,8 +72,7 @@ def clustering(Cluster, r, subsequence):
 	if cluster_id != False:
 		Cluster.clusters_activity[cluster_id] = datetime.now()
 
-		print("********************Ajout à un cluster",
-			  cluster_id, np.array(Cluster.clusters).shape)
+		print("********************Ajout à un cluster", cluster_id, np.array(Cluster.clusters).shape)
 
 		if len(Cluster.clusters[cluster_id]) < Cluster.nb_clustroid and not any(np.array_equal(subsequence, i) for i in Cluster.clusters[cluster_id]):
 			Cluster.clusters[cluster_id].append(subsequence)
@@ -181,6 +180,8 @@ def check(indice, real_indices, gap):
 		if indice in search:
 			Flag = False
 	return Flag
+
+
 
 
 """def score_to_label(nbr_anomalies,scores,gap):
