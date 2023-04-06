@@ -26,7 +26,7 @@ def distance(a, b):
 
 def z_norm_dist(x, y):
 	# ******songer à tester sans la distance normale ajoutée  pour voir l plus de la distance proposée
-	return np.linalg.norm(x - y)*math.sqrt(2*len(x)*(1-np.corrcoef(x, y)[0][1]))
+	return math.sqrt(2*len(x)*(1-np.corrcoef(x, y)[0][1]))
 
 
 class Cluster:

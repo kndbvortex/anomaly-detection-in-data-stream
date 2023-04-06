@@ -7,6 +7,9 @@ import numpy as np
 
 
 def z_norm_dist(x: np.array, y: np.array) -> float:
+    # x /= np.linalg.norm(x)
+    # y /= np.linalg.norm(y)
+    print(f'inside z-nom {math.sqrt(2*len(x)*(1-np.corrcoef(x, y)[0][1]))}')
     # ******songer à tester sans la distance normale ajoutée  pour voir l plus de la distance proposée
     return np.linalg.norm(x - y)*math.sqrt(2*len(x)*(1-np.corrcoef(x, y)[0][1]))
 
@@ -21,6 +24,8 @@ def distance(a: np.array, b: np.array) -> float:
             float : z_normalized distance between a and b
     """
     # ******songer à tester sans la distance normale ajoutée  pour voir l plus de la distance proposée
+    a = a/np.norm(a)
+    b = b/np.norm(b)
     return z_norm_dist(a, b)
 
 
@@ -131,7 +136,9 @@ class DragStream:
                 for j in range(i+1, len(self.discords)):
                     dist_.append(self.distance(
                         self.discords[i], self.discords[j]))
-            self.r = np.std(dist_)
+            print(self.r)
+            self.r = 48
+            print(self.r)
 
     def score_one(self, x: np.array):
         # print(len(self.discords))
@@ -162,12 +169,15 @@ class DragStream:
         if isCandidate and isOutlier:
             # print('discord')
             self.discords.append(x)
+            self._ajust_threshold()
             if self.training_period > 0:
                 return -1
-            print(f'anomaly détectée !!!')
             return min_dist_if_discord if min_dist_if_discord != float('inf') else 1
         elif isOutlier and not isCandidate:
             self.cluster_manager.add_new_cluster(x)
+            
+        if self.training_period > 0:
+            return -1
         return 0
 
     def test(self, T, w):
@@ -197,22 +207,32 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import numpy as np
     import plotly.express as px
-    df = pd.read_csv(
-        "dataset/nab-data/realKnownCause/ambient_temperature_system_failure.csv", usecols=['value'])
-    dragClass = DragStream(5, 22, 20)
-    _, S, scores, _ = dragClass.test(df['value'].values, 300)
-    dist_ = []
-    for i in range(len(dragClass.discords)):
-        for j in range(i+1, len(dragClass.discords)):
-            dist_.append(
-                dragClass.distance(dragClass.discords[i], dragClass.discords[j]))
-    print(len(dragClass.discords))
-    print(dist_, len(S))
-    if dist_:
-        print(np.mean(dist_))
-        print(np.std(dist_))
+    a = np.random.randint(0,10, 20)
+    b = np.random.randint(0,10, 20)
+    m = a.shape[0]
+    c = np.sqrt(2*m*(1-(np.sum(a*b)-m*np.mean(a)*np.std(b))/(m*np.std(a)*np.std(b)+1e-10)))
+    e = np.array((a-np.mean(a))/np.std(a))
+    f = (b-np.mean(b))/np.std(b)
+    d = np.linalg.norm((a-np.mean(a))/np.std(a) - (b-np.mean(b))/np.std(b), )
+    print(c)
+    print(d)
+    print(z_norm_dist(a, b))
+    # df = pd.read_csv(
+    #     "dataset/nab-data/realKnownCause/ambient_temperature_system_failure.csv", usecols=['value'])
+    # dragClass = DragStream(5, 22, 20)
+    # _, S, scores, _ = dragClass.test(df['value'].values, 300)
+    # dist_ = []
+    # for i in range(len(dragClass.discords)):
+    #     for j in range(i+1, len(dragClass.discords)):
+    #         dist_.append(
+    #             dragClass.distance(dragClass.discords[i], dragClass.discords[j]))
+    # print(len(dragClass.discords))
+    # print(dist_, len(S))
+    # if dist_:
+    #     print(np.mean(dist_))
+    #     print(np.std(dist_))
 
-    # print(scores, S)
-    # print(df.shape)
-    plt.plot(scores)
-    plt.show()
+    # # print(scores, S)
+    # # print(df.shape)
+    # plt.plot(scores)
+    # plt.show()

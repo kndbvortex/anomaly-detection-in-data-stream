@@ -152,21 +152,17 @@ def dataset_test(merlin_score, best_params, time_taken, all_identified, key, idx
             merlin_score[idx] = score
             all_identified[idx] = identified
             try:
-
-                base2 = pd.read_excel(
-                    "f1score_"+scoring_metric+"_abnormal_point_results.xlsx")
+                
+                base2 = dict()
 
                 base2[key+"_identified"][idx] = all_identified[idx]
                 base2[key+"_Overlap_merlin"][idx] = score
                 base2[key+"best_param"][idx] = str(best_params[idx])
                 base2[key+"time_taken"][idx] = time_taken[idx]
-                print("**********************************************************")
-                print("**********************************************************")
-                print(dataset, score, best_param, time_taken_1)
-                print("**********************************************************")
+                
             except:
-                base2 = pd.read_excel(
-                    "f1score_"+scoring_metric+"_abnormal_point_results.xlsx")
+                
+                base2 = {}
                 base2[key+"_identified"] = all_identified
                 base2[key+"_Overlap_merlin"] = merlin_score
                 base2[key+"best_param"] = best_params
@@ -176,7 +172,14 @@ def dataset_test(merlin_score, best_params, time_taken, all_identified, key, idx
                     print(best_params[idx], best_param)
                     for key2, value in best_params[idx].items():
                         base2["best_param"+key2] = "RAS"
-
+            finally:
+                print("**********************************************************")
+                print("**********************************************************")
+                print(
+                    f'\tdataset: {dataset} \n\tScore: {score}\n\tBest params: {best_param}\n\t time {time_taken_1}')
+                print("**********************************************************")
+                
+            base2 = pd.DataFrame(base2)
             if key in file:
                 """for key2,value in best_params[idx].items():
                     base2["best_param"+key2][idx] =best_params[idx][key2]"""
@@ -199,7 +202,7 @@ pool = mp.Pool(mp.cpu_count())
 def test(meth):
 
     methods = {meth: 0}  # , "HS-tree":0,"MILOF":0,"HS-tree":0, "iforestASD":0}#"MILOF":0}# "MILOF":class_MILOF.test, "iforestASD_SUB":iforestASD_SUB,"subSequenceiforestASD":iforestASD } #"iforestASD":iforestASD, "HStree":HStree "MILOF":MILOF
-    scoring_metric = ["merlin"]  # ,"merlin"
+    scoring_metric = ["merlin", 'nab']  # ,"merlin"
     print(methods)
     for key, method in methods.items():
         thresholds = []
