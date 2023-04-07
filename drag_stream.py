@@ -5,6 +5,7 @@ import matrixprofile as mp
 import plotly.graph_objects as go
 from river import drift
 from sklearn.utils import shuffle
+from sklearn.metrics import classification_report
 # from pysad.evaluation import AUROCMetric
 import numpy as np
 
@@ -241,6 +242,7 @@ class class_our:
 				sub_right = np.concatenate(
 					[sub_right, np.arange(identify, identify+gap)])
 			sub_identified = np.unique(sub_identified)
+			print('$'*10, sub_identified)
 			sub_right = np.unique(sub_right)
 			recall = len(np.intersect1d(
 				sub_identified, sub_right))/len(sub_right)
@@ -263,6 +265,7 @@ class class_our:
 			thres = sorted(q, reverse=True, key=lambda x: x[0])[0][1]
 			threshold = thres
 			arg = np.where(thresholds == thres)
+			print(f'thresholds : {thresholds} thres: {thres}'.center(100, '$'))
 
 			# i will throw only real_indices here. [0 if i<threshold else 1 for i in scores ]
 			return np.where(scores < threshold, 0, 1)

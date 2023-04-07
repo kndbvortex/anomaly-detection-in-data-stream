@@ -207,16 +207,25 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import numpy as np
     import plotly.express as px
-    a = np.random.randint(0,10, 20)
-    b = np.random.randint(0,10, 20)
-    m = a.shape[0]
-    c = np.sqrt(2*m*(1-(np.sum(a*b)-m*np.mean(a)*np.std(b))/(m*np.std(a)*np.std(b)+1e-10)))
-    e = np.array((a-np.mean(a))/np.std(a))
-    f = (b-np.mean(b))/np.std(b)
-    d = np.linalg.norm((a-np.mean(a))/np.std(a) - (b-np.mean(b))/np.std(b), )
-    print(c)
-    print(d)
-    print(z_norm_dist(a, b))
+    # a = np.random.randint(0,10, 2)
+    # b = np.random.randint(0,10, 2)
+    # m = a.shape[0]
+    # c = np.sqrt(2*m*(1-(np.sum(a*b)-m*np.mean(a)*np.mean(b))/(m*np.std(a)*np.std(b))))
+    # e = np.array((a-np.mean(a))/np.std(a))
+    # f = (b-np.mean(b))/np.std(b)
+    # d = np.linalg.norm((a-np.mean(a))/np.std(a) - (b-np.mean(b))/np.std(b), )
+    # print(c)
+    df = pd.read_csv('dataset/nab-data/realKnownCause/ambient_temperature_system_failure.csv')
+
+    plt.plot(df['value'].index[:3721], df['value'][:3721], c='black')
+    plt.plot(df['value'].index[3721:3721+362], df['value'][3721:3721+362], c='red')
+    plt.plot(df['value'].index[3721+362: 6180], df['value'][3721+362: 6180], c='black')
+    plt.plot(df['value'].index[6180:6180+362], df['value'][6180:6180+362], c='red')
+    plt.plot(df['value'].index[6180+362:], df['value'][6180+362:], c='black')
+    plt.show()
+    # plt.quiver((0,0), )
+    # print(d)
+    # print(z_norm_dist(a, b))
     # df = pd.read_csv(
     #     "dataset/nab-data/realKnownCause/ambient_temperature_system_failure.csv", usecols=['value'])
     # dragClass = DragStream(5, 22, 20)

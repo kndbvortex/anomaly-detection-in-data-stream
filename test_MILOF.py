@@ -93,6 +93,7 @@ def dataset_test(merlin_score, best_params, time_taken, all_identified, key, idx
             gap = int(len(X)/100)
         if scoring_metric == "nab":
             gap = int(len(X)/(20*nbr_anomalies))
+            print(f'gap : {gap}'.center(50, '%'))
 
         if key == "HS-tree":
             # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
