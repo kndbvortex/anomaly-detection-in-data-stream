@@ -52,6 +52,8 @@ mutex =multiprocessing.Lock()
 
 
 from sklearn.preprocessing import OneHotEncoder
+base_file = 'real_known_point_datasets.xlsx'
+base = pd.read_excel(base_file)
 
 merlin_score=np.zeros(len(base))
 time_taken = np.zeros(len(base))
@@ -89,10 +91,10 @@ def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,data
             base_file ='real_known_point_datasets.xlsx'
             base = pd.read_excel(base_file)
             
-            df = pd.read_csv("dataset/"+dataset, names=["value"])
+            df = pd.read_csv("dataset/"+dataset, usecols=['value'])
             print(dataset)
             if os.path.exists("real_nab_data/"+dataset) :
-                df = pd.read_csv("real_nab_data/"+dataset)
+                df = pd.read_csv("real_nab_data/"+dataset, usecols=['value'])
             column="value"
             # reading the dataset
             X =[[i] for i in df[column].values]
@@ -101,7 +103,7 @@ def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,data
         
         if sys.argv[2]=="M":
             base_file ='multivariate_abnormal_point.csv'
-            base = pd.read_csv(base_file)
+            base = pd.read_csv(base_file, usecols=['value'])
             print("we execute on ",dataset)
             oe_style = OneHotEncoder()
             for col in df.columns:
@@ -123,16 +125,16 @@ def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,data
             gap = int(len(X)/(20*nbr_anomalies))
         
         if key =="HS-tree":
-            real_scores, scores_label, identified,score,best_param, time_taken_1= class_hstree.test(dataset,X,right,nbr_anomalies,gap,scoring_metric=scoring_metric)  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
+            real_scores, scores_label, identified,score,best_param, time_taken_1= class_hstree().test(dataset,X,right,nbr_anomalies,gap,scoring_metric=scoring_metric)  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
 
         if key =="MILOF":
-            real_scores, scores_label, identified,score,best_param, time_taken_1= class_MILOF.test(dataset,X,right,nbr_anomalies,gap)  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
+            real_scores, scores_label, identified,score,best_param, time_taken_1= class_MILOF().test(dataset,X,right,nbr_anomalies,gap)  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
         if key=="iforestASD":
-            real_scores, scores_label, identified,score,best_param, time_taken_1= class_iforestASD.test(X,right,nbr_anomalies,gap)  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
+            real_scores, scores_label, identified,score,best_param, time_taken_1= class_iforestASD().test(X,right,nbr_anomalies,gap)  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
         if key=="ARIMAFD":
-            real_scores, scores_label, identified,score,best_param, time_taken_1= class_ARIMAFD.test(df[[column]],X,right,nbr_anomalies,gap,scoring_metric="merlin")  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
+            real_scores, scores_label, identified,score,best_param, time_taken_1= class_ARIMAFD().test(df[[column]],X,right,nbr_anomalies,gap,scoring_metric="merlin")  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
         if key=="KitNet":
-            real_scores, scores_label, identified,score,best_param, time_taken_1= class_KitNet.test(X,right,nbr_anomalies,gap,scoring_metric="merlin")  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
+            real_scores, scores_label, identified,score,best_param, time_taken_1= class_KitNet().test(X,right,nbr_anomalies,gap,scoring_metric="merlin")  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
 
         
         df["anomaly_score"]=real_scores

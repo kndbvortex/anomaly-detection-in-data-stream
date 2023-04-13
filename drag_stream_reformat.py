@@ -175,7 +175,7 @@ class DragStream:
             return min_dist_if_discord if min_dist_if_discord != float('inf') else 1
         elif isOutlier and not isCandidate:
             self.cluster_manager.add_new_cluster(x)
-            
+
         if self.training_period > 0:
             return -1
         return 0
@@ -202,6 +202,32 @@ class DragStream:
         return self.discords, S, C_score, self.cluster_manager.clusters
 
 
+class NaiveIdea:
+    def __init__(self, training, window_size) -> None:
+        self.training = training + 1
+        self.window_size = window_size
+        self.window = []
+
+    def train(self, X):
+        scores = []
+        for x in X:
+            scores.append(self.train_one(x))
+        return scores
+    
+    def train_one(self, x):
+        last_std = np.std(self.window[self.window_size//2:])
+        if len(self.window) > self.window_size:
+            self.window.pop(0)
+        self.window.append(x)
+
+        if self.training > 0:
+            self.training -= 1
+        if self.training > 0:
+            return 0
+        return np.std(self.window[self.window_size//2:]) - last_std
+            
+
+
 if __name__ == '__main__':
     import pandas as pd
     import matplotlib.pyplot as plt
@@ -215,13 +241,23 @@ if __name__ == '__main__':
     # f = (b-np.mean(b))/np.std(b)
     # d = np.linalg.norm((a-np.mean(a))/np.std(a) - (b-np.mean(b))/np.std(b), )
     # print(c)
-    df = pd.read_csv('dataset/nab-data/realKnownCause/ambient_temperature_system_failure.csv')
+    df = pd.read_csv(
+        'dataset/nab-data/realKnownCause/ambient_temperature_system_failure.csv')
 
-    plt.plot(df['value'].index[:3721], df['value'][:3721], c='black')
-    plt.plot(df['value'].index[3721:3721+362], df['value'][3721:3721+362], c='red')
-    plt.plot(df['value'].index[3721+362: 6180], df['value'][3721+362: 6180], c='black')
-    plt.plot(df['value'].index[6180:6180+362], df['value'][6180:6180+362], c='red')
-    plt.plot(df['value'].index[6180+362:], df['value'][6180+362:], c='black')
+    fig, ax = plt.subplots(2, 1, sharex=True)
+    ax[0].plot(df['value'].index[:3721], df['value'][:3721], c='black')
+    ax[0].plot(df['value'].index[3721:3721+364//4],
+             df['value'][3721:3721+364//4], c='red')
+    ax[0].plot(df['value'].index[3721+362//4: 6180],
+             df['value'][3721+362//4: 6180], c='black')
+    ax[0].plot(df['value'].index[6180:6180+362//4],
+             df['value'][6180:6180+362//4], c='red')
+    ax[0].plot(df['value'].index[6180+362//4:],
+             df['value'][6180+362//4:], c='black')
+    
+    n = NaiveIdea(1000, 100)
+    ax[1].plot(n.train(df['value']))
+    
     plt.show()
     # plt.quiver((0,0), )
     # print(d)
