@@ -70,8 +70,12 @@ def dataset_test(merlin_score, best_params, time_taken, all_identified, key, idx
 
     # try :
     if True:  # "ambient_temperature_system_failure" in dataset: #ligne =="params" or flag:
-
-        df = pd.read_csv("dataset/"+dataset)
+        
+        if dataset.split('.')[-1] == 'txt':
+            df = pd.read_csv("dataset/"+dataset, sep='\s+', header=None)
+            df.columns = ['value']
+        else:
+            df = pd.read_csv("dataset/"+dataset)
         print('Lecture', df.columns, df['value'][0])
         df = pd.DataFrame(df["value"])
         print(df.columns, '......')

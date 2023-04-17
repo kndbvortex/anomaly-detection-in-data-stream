@@ -1,6 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
+from plotly.subplots import make_subplots
+
 
 urls = {
     'ecg': [
@@ -46,10 +48,10 @@ def get_data():
 
 
 if __name__ == '__main__':
-    d = pd.read_csv('~/vis.txt', header=None, sep='\s+')
+    # d = pd.read_csv('~/vis.txt', header=None, sep='\s+')
     # plt.plot(d[0])
     # plt.plot(d[1])
-    plt.plot(d[2])
+    # plt.plot(d[2])
     
     # df = pd.read_csv(urls['ecg'][2], sep='\t', header=None)
     # df2 = pd.read_csv(urls['ecg'][1], sep='\s+', header=None)
@@ -66,6 +68,25 @@ if __name__ == '__main__':
     # plt.plot(df[2])
     # print(df.shape)
     # print(df2)
+    
+    a = pd.read_csv('streaming_results/our/our_231_UCR_Anomaly_mit14134longtermecg_8763_47530_47790.txt', sep=',')
+    a['new'] = a['value']
+    a['new'][:47530] = None
+    a['new'][47790:] = None
+
+    fig = px.line(a)
+    
+    
+    b = pd.read_csv('streaming_results/our/our_227_UCR_Anomaly_mit14134longtermecg_11231_29000_29100.txt', sep=',')
+    b['new'] = b['value']
+    b['new'][:29000] = None
+    b['new'][29100:] = None
+    fig1 = px.line(b)
+    fig1.show()
+    
+    # fig = px.line(a)
+    
+    # fig.show()
     plt.show()
     
 
