@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 import plotly.express as px
 from plotly.subplots import make_subplots
@@ -46,6 +47,8 @@ def get_data():
         'http://www.cs.ucr.edu/~eamonn/discords/power_data.txt'
     ]
 
+def kurtosis(x):
+    return np.mean(np.power((x-np.mean(x))/(np.std(x) + 1e-6), 4))
 
 if __name__ == '__main__':
     # d = pd.read_csv('~/vis.txt', header=None, sep='\s+')
@@ -69,12 +72,12 @@ if __name__ == '__main__':
     # print(df.shape)
     # print(df2)
     
-    a = pd.read_csv('streaming_results/our/our_231_UCR_Anomaly_mit14134longtermecg_8763_47530_47790.txt', sep=',')
-    a['new'] = a['value']
-    a['new'][:47530] = None
-    a['new'][47790:] = None
+    # a = pd.read_csv('streaming_results/our/our_231_UCR_Anomaly_mit14134longtermecg_8763_47530_47790.txt', sep=',')
+    # a['new'] = a['value']
+    # a['new'][:47530] = None
+    # a['new'][47790:] = None
 
-    fig = px.line(a)
+    # fig = px.line(a)
     
     
     b = pd.read_csv('streaming_results/our/our_227_UCR_Anomaly_mit14134longtermecg_11231_29000_29100.txt', sep=',')
@@ -82,11 +85,20 @@ if __name__ == '__main__':
     b['new'][:29000] = None
     b['new'][29100:] = None
     fig1 = px.line(b)
-    fig1.show()
+    # fig1.show()
+    
+    print(kurtosis(b['new'][29000:29100]))
+    l =[]
+    for i in range(0, 29000,100):
+        l.append(kurtosis(b['value'][i:i+100]))
+    plt.plot(range(0, 29000,100),l, c='black')
+    plt.plot([i+1], [kurtosis(b['new'][29000:29100])], c='red')
+    print(l)
     
     # fig = px.line(a)
     
     # fig.show()
+
     plt.show()
     
 
