@@ -48,17 +48,17 @@ base = pd.read_excel(base_file)
 
 def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,dataset,scoring_metric="merlin"):
 
-    try: 
-        base2 = pd.read_excel(scoring_metric+"_discord_results.xlsx") 
-        ligne = base2[key+"best_param"][idx]
-        flag=False 
-    except :
-        flag=True
-        print("erreur de fichier ")
-        ligne="erreur"
+    # try: 
+    #     base2 = pd.read_excel(scoring_metric+"_discord_results.xlsx") 
+    #     ligne = base2[key+"best_param"][idx]
+    #     flag=False 
+    # except :
+    #     flag=True
+    #     print("erreur de fichier ...", scoring_metric+"_discord_results.xlsx")
+    #     ligne="erreur"
         
     #try :
-    if "dutch" in dataset : #True :#ligne =="params" or flag:
+    if True : #True :#ligne =="params" or flag:
 
         df = pd.read_csv("dataset/"+dataset, names=["value"])
         print(dataset)
@@ -67,6 +67,7 @@ def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,data
         column="value"
 
         X =[[i] for i in df[column].values]
+        print(df.head())
         right=np.array(str(base["Position discord"][idx]).split(';'))
         nbr_anomalies=len(str(base["Position discord"][idx]).split(';'))
 
@@ -115,17 +116,18 @@ def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,data
             all_identified[idx] =identified
             try:
                 
-                base2 = pd.read_excel(file) 
-                
-                base2[key+"_identified"] [idx]= all_identified[idx]
-                base2[key+"_Overlap_merlin"] [idx]= score
-                base2[key+"best_param"] [idx]=str(best_params [idx])
-                base2[key+"time_taken"] [idx]= time_taken[idx]
-            except :
-                base2 = pd.read_excel(scoring_metric+"_discord_results.xlsx")
+                base2 = pd.read_excel(file)
+                print(all_identified[idx])
+                base2.loc[idx, key+"_identified"] = str(all_identified[idx])
+                base2.loc[idx, key+"_Overlap_merlin"] = score
+                base2.loc[idx, key+"best_param"] = str(best_params [idx])
+                base2.loc[idx, key+"time_taken"] = time_taken[idx]
+            except Exception as e:
+                print(f'Except,  {e} \n\n\n\n')
+                base2 = {}
                 base2[key+"_identified"] = all_identified
                 base2[key+"_Overlap_merlin"] = merlin_score
-                base2[key+"best_param"] =best_params 
+                base2[key+"best_param"] = best_params 
                 base2[key+"time_taken"]= time_taken
                 
                 if key in file:
@@ -139,6 +141,7 @@ def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,data
                     base2["best_param"+key2][idx] =best_params[idx][key2]
                 base2.to_excel(file)
             else:"""
+            base2 = pd.DataFrame(base2)
             base2.to_excel(file,index=False)
 
 
@@ -183,6 +186,8 @@ def test (meth) :
                 best_params= mgr.list([]) +  ["params" for i in time_taken]
                 all_identified= mgr.list([]) + ["no" for i in time_taken]
                 output =pool.starmap(dataset_test, [(merlin_score,best_params,time_taken,all_identified,key,i,base["Dataset"][i],scoring) for i ,dataset in enumerate(base["Dataset"])  ] )
-                print ("**** merlin score",merlin_score)
+                # print(f'Output: {output}')
+                print ("**** merlin score", [element[3] for element in output])
 
-test("LAMP")
+test("our")
+# Scores : 0.7777777777777779  {'cluster': 29, 'training': 747, 'window': 200, 'threshold': 4.5}

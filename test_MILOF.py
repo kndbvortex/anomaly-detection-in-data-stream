@@ -181,7 +181,7 @@ def dataset_test(merlin_score, best_params, time_taken, all_identified, key, idx
                 print("**********************************************************")
                 print("**********************************************************")
                 print(
-                    f'\tdataset: {dataset} \n\tScore: {score}\n\tBest params: {best_param}\n\t time {time_taken_1}')
+                    f'\tdataset: {dataset} \n\tScore: {score}\n\tBest params: {best_param}\n\ttime {time_taken_1}')
                 print("**********************************************************")
                 
             base2 = pd.DataFrame(base2)

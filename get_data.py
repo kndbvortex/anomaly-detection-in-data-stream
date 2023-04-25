@@ -91,8 +91,8 @@ if __name__ == '__main__':
     l =[]
     for i in range(0, 29000,100):
         l.append(kurtosis(b['value'][i:i+100]))
-    plt.plot(range(0, 29000,100),l, c='black')
-    plt.plot([i+1], [kurtosis(b['new'][29000:29100])], c='red')
+    plt.plot(range(0, 29000,100),l)
+    plt.scatter([i], [kurtosis(b['new'][29000:29100])])
     print(l)
     
     # fig = px.line(a)
