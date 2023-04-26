@@ -52,12 +52,12 @@ class Cluster:
         self.clusters.append([subsequence])
 
 
-def clustering(Cluster, r, subsequence):
+def clustering(cluster_set, r, subsequence):
     dist = r
     min_dist = float('inf')
     cluster_id = -1
     # try to identify its cluster
-    for id_cluster, cluster in enumerate(Cluster.clusters):
+    for id_cluster, cluster in enumerate(cluster_set.clusters):
         for clustroid in cluster:
             if d := z_norm_dist(clustroid, subsequence) < dist:
                 print("********************************, it entered a cluster")
@@ -71,32 +71,43 @@ def clustering(Cluster, r, subsequence):
 	"""
     # try to know if it can be the centroid
     if cluster_id != -1:
-        Cluster.clusters_activity[cluster_id] = datetime.now()
+        cluster_set.clusters_activity[cluster_id] = datetime.now()
 
         print("********************Ajout à un cluster",
-              cluster_id, np.array(Cluster.clusters).shape)
+              cluster_id, np.array(cluster_set.clusters).shape)
 
-        if len(Cluster.clusters[cluster_id]) < Cluster.nb_clustroid and not any(np.array_equal(subsequence, i) for i in Cluster.clusters[cluster_id]):
-            Cluster.clusters[cluster_id].append(subsequence)
+        if len(cluster_set.clusters[cluster_id]) < cluster_set.nb_clustroid and not any(np.array_equal(subsequence, i) for i in cluster_set.clusters[cluster_id]):
+            cluster_set.clusters[cluster_id].append(subsequence)
 
-        elif any(np.array_equal(subsequence, i) for i in Cluster.clusters[cluster_id]):
+        elif any(np.array_equal(subsequence, i) for i in cluster_set.clusters[cluster_id]):
             # print("**** il avait deja son jumeau")
             return True
         else:
             # print("******************** il vient remplacer un clustroid")
             # if there is a subsequence which is too near another subsequence, we can remove it . we can do it because l'inégalité triangulaire est vérifiée
             dist_matrice = np.array([
-                [z_norm_dist(i, j) for i in Cluster.clusters[cluster_id]] for j in Cluster.clusters[cluster_id]
+                [z_norm_dist(i, j) for i in cluster_set.clusters[cluster_id]] for j in cluster_set.clusters[cluster_id]
             ])
             min_dist = dist_matrice[dist_matrice != 0].min()
             ij_min = np.where(dist_matrice == min_dist)[0]
             ij_min = tuple([i.item() for i in ij_min])
             if dist > min_dist:
-                Cluster.clusters[cluster_id][ij_min[0]] = subsequence
+                cluster_set.clusters[cluster_id][ij_min[0]] = subsequence
         return True
     else:
         return False
+    
 
+def distance_to(cluster_set:Cluster, sub, r):
+    dist = r
+    min_dist = float('inf')
+    for cluster in cluster_set.clusters:
+        for clustroid in cluster:
+            if d := z_norm_dist(clustroid, sub) < dist:
+                print("********************************, it entered a cluster")
+                if d < min_dist:
+                    min_dist = d
+    return min_dist
 
 def stream_discord(T, w, r, training, max_clusters):
     """
@@ -123,35 +134,50 @@ def stream_discord(T, w, r, training, max_clusters):
     C = [S[0]]
     cluster = Cluster(T[S[0]:S[0]+w], r, max_clusters)
     C_score = np.zeros(len(T))
-    C_score[S[0]] = float('inf')
+    C_score[S[0]] = 0
     # print(C)
-    for s in [i for i in S if i not in C]:
+    for count, s in enumerate([i for i in S if i not in C]):
         isCandidate = True
         min_dist_if_discord = float('inf')
         for c in C:
             # print(s,"*",s+w,"**",len(T))
             min_dist_if_discord = min(
                 min_dist_if_discord, distance(T[s:s+w], T[c:c+w]))
-            if c <= training:  # ********because we can't update at every time
-                C_score[c] = min(C_score[c], distance(T[s:s+w], T[c:c+w]))
+            # if c <= training:  # ********because we can't update at every time
+            #     C_score[c] = min(C_score[c], distance(T[s:s+w], T[c:c+w]))
             if distance(T[s:s+w], T[c:c+w]) < r:
                 C.remove(c)
                 if not clustering(cluster, r, T[c:c+w]):
                     cluster.add_cluster(T[s:s+w])
-                if c <= training:  # *********because we can't update at every time
-                    # ******** voir comment ajouter un temps d'attente
-                    C_score[c] = 0
+                # if c <= training:  # *********because we can't update at every time
+                #     # ******** voir comment ajouter un temps d'attente
+                #     C_score[c] = 0
                 isCandidate = False
                 # Normalement ici aussi on devrait l'ajouter au cluster mais le clustering n'est pas encore très bon et lui donner trop de responsabilité peut être difficile
 
         if isCandidate and not clustering(cluster, r, T[s:s+w]):
             C.append(s)
-            C_score[s] = min_dist_if_discord
+            if s >= training:
+                if(min_dist_if_discord == float('inf')):
+                    print('Inside', '+'*10)
+                    d = distance_to(cluster, T[s:s+w], r)
+                    if d == float('inf'):
+                        print('Inside1', '+'*10)
+                        
+                        C_score[s] = r - 1e-8
+                    else:
+                        print('InsideZ', '+'*10)
+                        
+                        C_score[s] = d
+                    
+                else:
+                    C_score[s] = min_dist_if_discord
         if not isCandidate and not clustering(cluster, r, T[s:s+w]):
             print("***************************it's not entering any cluster")
             cluster.add_cluster(T[s:s+w])
 
     # S=[i for i in S if i not in C]
+    print(f'Fucking Scores: {np.unique(C_score)}, len: {T.shape} training: {training}, len(s): {len(S)}')
     return C, S, C_score, cluster
 
 
@@ -280,7 +306,8 @@ class class_our:
         possible_window = np.array([gap, gap])  # arange(100,gap+200)
         possible_threshold = np.arange(1, 5, 0.5)
         right_discord = [int(discord) for discord in right]
-        possible_training = np.arange(100, min(min(right_discord), int(len(X)/4)))
+        possible_training = np.arange(
+            100, min(min(right_discord), int(len(X)/4)))
         possible_cluster = np.arange(10, 30)
         space2 = {
             "training": hp.choice("training_index", possible_training),
@@ -321,7 +348,6 @@ class class_our:
 
         scores_label = score_to_label(nbr_anomalies, scores, gap)
         # scoring(scores)#{'loss': 1/1+score, 'status': STATUS_OK}
-        score = 1/(1+scoring(scores_label))
-        print(f'Scores : {score}')
-        return np.zeros(len(X)), scores_label, [], score, best_param, end-start
+        scoring_ = scoring(scores_label)
+        return np.zeros(len(X)), scores_label, [], scoring_, best_param, end-start
         # real_scores, scores_label, identified,score,best_param, time_taken_1

@@ -158,25 +158,25 @@ def dataset_test(merlin_score, best_params, time_taken, all_identified, key, idx
             all_identified[idx] = identified
             try:
                 
-                base2 = dict()
-
-                base2[key+"_identified"][idx] = all_identified[idx]
-                base2[key+"_Overlap_merlin"][idx] = score
-                base2[key+"best_param"][idx] = str(best_params[idx])
-                base2[key+"time_taken"][idx] = time_taken[idx]
-                
-            except:
-                
+                base2 = pd.read_excel(file)
+                print(all_identified[idx])
+                base2.loc[idx, key+"_identified"] = str(all_identified[idx])
+                base2.loc[idx, key+"_Overlap_merlin"] = score
+                base2.loc[idx, key+"best_param"] = str(best_params [idx])
+                base2.loc[idx, key+"time_taken"] = time_taken[idx]
+            except Exception as e:
+                print(f'Except,  {e} \n\n\n\n')
                 base2 = {}
                 base2[key+"_identified"] = all_identified
                 base2[key+"_Overlap_merlin"] = merlin_score
-                base2[key+"best_param"] = best_params
-                base2[key+"time_taken"] = time_taken
-
+                base2[key+"best_param"] = best_params 
+                base2[key+"time_taken"]= time_taken
+                
                 if key in file:
+
                     print(best_params[idx], best_param)
-                    for key2, value in best_params[idx].items():
-                        base2["best_param"+key2] = "RAS"
+                    for key2,value in best_params[idx].items():
+                        base2["best_param"+key2] ="RAS"
             finally:
                 print("**********************************************************")
                 print("**********************************************************")

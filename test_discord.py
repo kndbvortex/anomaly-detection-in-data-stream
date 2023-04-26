@@ -119,8 +119,8 @@ def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,data
                 base2 = pd.read_excel(file)
                 print(all_identified[idx])
                 base2.loc[idx, key+"_identified"] = str(all_identified[idx])
-                base2.loc[idx, key+"_Overlap_merlin"] = score
-                base2.loc[idx, key+"best_param"] = str(best_params [idx])
+                base2.loc[idx, key+"_Overlap_merlin"] = str(score)
+                base2.loc[idx, key+"best_param"] = str(best_params[idx])
                 base2.loc[idx, key+"time_taken"] = time_taken[idx]
             except Exception as e:
                 print(f'Except,  {e} \n\n\n\n')
