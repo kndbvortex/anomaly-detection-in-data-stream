@@ -35,6 +35,7 @@ from test_iforestASD import class_iforestASD
 from score_nab import evaluating_change_point
 from test_ARIMAFD import class_ARIMAFD
 from test_KitNet import class_KitNet
+from drag_stream_2 import DragStream
 
 
 # Test pipeline   les threshold des methodes coe iforest seront récupérés dans NAB parce qu'NAB à une fonction de score automatisé. 
@@ -83,7 +84,8 @@ def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,data
             real_scores, scores_label, identified,score,best_param, time_taken_1= class_LAMP.test(dataset,df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
 
         if key=="our":
-            real_scores, scores_label, identified,score,best_param, time_taken_1= class_our.test(dataset,df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
+            real_scores, scores_label, identified,score,best_param, time_taken_1= DragStream.test(dataset,df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
+            #real_scores, scores_label, identified,score,best_param, time_taken_1= class_our.test(dataset,df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
 
         if key=="matrix_profile":
             real_scores, scores_label, identified,score,best_param, time_taken_1= class_LAMP.test_mp(dataset,df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
@@ -117,7 +119,7 @@ def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,data
             try:
                 
                 base2 = pd.read_excel(file)
-                print(all_identified[idx])
+                print(base.iloc[idx, 0],all_identified[idx])
                 base2.loc[idx, key+"_identified"] = str(all_identified[idx])
                 base2.loc[idx, key+"_Overlap_merlin"] = str(score)
                 base2.loc[idx, key+"best_param"] = str(best_params[idx])
@@ -190,4 +192,6 @@ def test (meth) :
                 print ("**** merlin score", [element[3] for element in output])
 
 test("our")
-# Scores : 0.7777777777777779  {'cluster': 29, 'training': 747, 'window': 200, 'threshold': 4.5}
+# Scores : 0.7777777777777779  {'cluster': 29, 'training': 747, 'window': 200, 'threshold': 4.5} [0.18181818181818182, 0.3076923076923077, 0.4444444444444445]
+# [0.18181818181818182, 0.25, 0.4444444444444445] dragstream
+# [0.06897740989825832, 0.47, 0.81] mp
