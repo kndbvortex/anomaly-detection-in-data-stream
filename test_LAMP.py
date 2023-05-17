@@ -193,7 +193,7 @@ class class_LAMP:
 			#try:
 			scores= Matrix_profile(dataset,nbr_of_discord= args["nbr_anomalies"], n=gap)
 			scores =score_to_label(nbr_anomalies,scores,gap)
-			return 1/(1+scoring(scores))#scoring(scores)#{'loss': 1/1+score, 'status': STATUS_OK}
+			return -1*scoring(scores)#scoring(scores)#{'loss': 1/1+score, 'status': STATUS_OK}
 
 		possible_nbr_anomalies=np.arange(max(1,nbr_anomalies-1),nbr_anomalies+3)
 		space2 ={"nbr_anomalies":hp.choice("nbr_anomalies_index",possible_nbr_anomalies)}
@@ -203,7 +203,7 @@ class class_LAMP:
 		#best = fmin(fn=objective,space=space2, algo=tpe.suggest, max_evals=20,trials = trials)
 
 
-		best = fmin(fn=objective,space=space2, algo=tpe.suggest, max_evals=1,trials = trials)
+		best = fmin(fn=objective,space=space2, algo=tpe.suggest, max_evals=5,trials = trials)
 
 		start =time.monotonic()
 		real_scores= Matrix_profile(dataset,nbr_of_discord=possible_nbr_anomalies[best["nbr_anomalies_index"]],n=gap )
@@ -249,7 +249,7 @@ class class_LAMP:
 			recall =len(np.intersect1d(sub_identified,sub_right))/len(sub_right)
 			precision = len(np.intersect1d(sub_identified,sub_right))/len(sub_identified)
 			try :
-					score =2*(recall*precision)/(recall+precision)
+				score =2*(recall*precision)/(recall+precision)
 			except :
 				score=0.0
 			return score

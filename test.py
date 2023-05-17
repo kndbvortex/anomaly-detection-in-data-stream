@@ -1,61 +1,32 @@
-from drag_stream import stream_discord
+from drag_stream import stream_discord, class_our
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import os
+import glob
 import plotly.express as px
 
-def scoring(scores, right, gap):
-    identified = np.where(scores.squeeze() == 1)[0]
-    sub_identified = np.array([])
-    sub_right = np.array([])
-    for identify in identified:
-        sub_identified = np.concatenate(
-            [sub_identified, np.arange(identify, identify+gap)])
-    for identify in right:
-        identify = int(identify)
-        sub_right = np.concatenate(
-            [sub_right, np.arange(identify, identify+gap)])
-    sub_identified = np.unique(sub_identified)
-    sub_right = np.unique(sub_right)
-    recall = len(np.intersect1d(
-        sub_identified, sub_right))/len(sub_right)
-    precision = len(np.intersect1d(
-        sub_identified, sub_right))/len(sub_identified)
-    try:
-        score = 2*(recall*precision)/(recall+precision)
-    except:
-        score = 0.0
-    return score
+# {'cluster': 15, 'training': 389, 'window': 100, 'threshold': 4.5}
 
-def score_to_label(scores,right,  gap):
 
-    thresholds = np.unique(scores)
-    f1_scores = []
-    for threshold in thresholds:
-        labels = np.where(scores < threshold, 0, 1)
-        print('Label'.center(10, "="))
-        print(labels)
-        print('Threshold'.center(10, "="))
-        print()
-        f1_scores.append(scoring(labels, right, gap))
-    q = list(zip(f1_scores, thresholds))
-    thres = sorted(q, reverse=True, key=lambda x: x[0])[0][1]
-    threshold = thres
-    arg = np.where(thresholds == thres)
+def drag_reproduce(df, param):
+    _, _, scores, _ = stream_discord(
+        df, param['window'], param['threshold'], param['training'], param['cluster'])
 
-    # i will throw only real_indices here. [0 if i<threshold else 1 for i in scores ]
-    return np.where(scores < threshold, 0, 1)
+    # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
+    real_scores, scores_label, identified, score, best_param, time_taken_1 = class_our.test(
+        dataset, df[column].values, right, nbr_anomalies, int(base["discord length"][idx]))
+
 
 def main():
     path = "~/Téléchargements/UCR_TimeSeriesAnomalyDatasets2021/AnomalyDatasets_2021/UCR_TimeSeriesAnomalyDatasets2021/FilesAreInHere/UCR_Anomaly_FullData/"
     # df = pd.read_csv("dataset/nab-data/realKnownCause/ambient_temperature_system_failure.csv", usecols=['value'])
-    df = pd.read_csv(path+"182_UCR_Anomaly_qtdbSel1005V_4000_12400_12800.txt", header=None, names=['value'], sep="\s+")
-    
+    df = pd.read_csv(path+"182_UCR_Anomaly_qtdbSel1005V_4000_12400_12800.txt",
+                     header=None, names=['value'], sep="\s+")
+
     # right = np.array([3721,6180])
     # nbr_anomalies = 2
     # gap = int(df.shape[0]/100)
-
 
     # C, S, C_score, cluster = stream_discord(df['value'].values, 362, 10, 1375, 10)
 
@@ -69,5 +40,22 @@ def main():
     # px.scatter(x=df.index, y=df['value'], color=color).show()
 
 
-if __name__=='__main__':
-    main()
+def make_dataset():
+    dir = '/home/dbkamgangu/Téléchargements/UCR_TimeSeriesAnomalyDatasets2021/AnomalyDatasets_2021/UCR_TimeSeriesAnomalyDatasets2021/FilesAreInHere/UCR_Anomaly_FullData/'
+    from os import listdir
+    from os.path import isfile, join
+    onlyfiles = [f for f in listdir(dir) if isfile(join(dir, f))]
+    dataset = pd.DataFrame(columns=['Dataset', 'Dataset length', 'Type', '#discords', 'Position discord', 'discord length', 'Max train'])
+    for file in onlyfiles:
+        df = pd.read_csv(dir+file, sep='\s+', header=None)
+        *_ , max_training, start, end = file.split('.txt')[0].split('_')
+        max_training, start, end = int(max_training), int(start), int(end)
+        dataset.loc[len(dataset),:] = [file, len(df), 'UCR', 1, start, end-start+1, max_training]
+        df.drop(df.index, inplace=True)
+    dataset.to_excel('discord_ucr.xlsx')
+
+
+if __name__ == '__main__':
+    df = pd.read_excel('discord_ucr.xlsx')
+    px.line(df, x=df.index, y=['Max train']).show()
+    print(df['Max train'].describe())

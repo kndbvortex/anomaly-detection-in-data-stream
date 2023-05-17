@@ -43,7 +43,7 @@ from drag_stream_2 import DragStream
 import multiprocessing
 mutex =multiprocessing.Lock()
 
-base_file ='discord.xlsx'
+base_file ='discord_ucr.xlsx'
 base = pd.read_excel(base_file)
 
 
@@ -60,11 +60,14 @@ def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,data
         
     #try :
     if True : #True :#ligne =="params" or flag:
-
-        df = pd.read_csv("dataset/"+dataset, names=["value"])
-        print(dataset)
-        if os.path.exists("real_nab_data/"+dataset) :
-            df = pd.read_csv("real_nab_data/"+dataset)
+        dir = '/home/dbkamgangu/Téléchargements/UCR_TimeSeriesAnomalyDatasets2021/AnomalyDatasets_2021/UCR_TimeSeriesAnomalyDatasets2021/FilesAreInHere/UCR_Anomaly_FullData/'
+        if '.txt' in dataset['Dataset']:
+            df = pd.read_csv(dir+dataset['Dataset'], sep='\s+', names=['value'])
+        else:
+            df = pd.read_csv("dataset/"+dataset['Dataset'], names=["value"])
+        print(dataset['Dataset'])
+        if os.path.exists("real_nab_data/"+dataset['Dataset']) :
+            df = pd.read_csv("real_nab_data/"+dataset['Dataset'])
         column="value"
 
         X =[[i] for i in df[column].values]
@@ -81,17 +84,17 @@ def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,data
             """base2 = pd.read_excel("point_methods_result_milof.xlsx")
             if base2[key+"best_param"][idx]=='params':
                 return idx, 0,0, 0, 0"""
-            real_scores, scores_label, identified,score,best_param, time_taken_1= class_LAMP.test(dataset,df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
+            real_scores, scores_label, identified,score,best_param, time_taken_1= class_LAMP.test(dataset['Dataset'],df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
 
         if key=="our":
-            real_scores, scores_label, identified,score,best_param, time_taken_1= DragStream.test(dataset,df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
+            real_scores, scores_label, identified,score,best_param, time_taken_1= DragStream.test(df[column].values,right,int(dataset["discord length"]), max_training=dataset['Max train'])  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
             #real_scores, scores_label, identified,score,best_param, time_taken_1= class_our.test(dataset,df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
 
         if key=="matrix_profile":
-            real_scores, scores_label, identified,score,best_param, time_taken_1= class_LAMP.test_mp(dataset,df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
+            real_scores, scores_label, identified,score,best_param, time_taken_1= class_LAMP.test_mp(dataset['Dataset'],df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
             print("*****")
         if key=="hotsax":
-            real_scores, scores_label, identified,score,best_param, time_taken_1= class_LAMP.test_hotsax(dataset,df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
+            real_scores, scores_label, identified,score,best_param, time_taken_1= class_LAMP.test_hotsax(dataset['Dataset'],df[column].values,right,nbr_anomalies,int(base["discord length"][idx]))  # Le concept drift est encore à faire manuellement et;le threshold est fixé après en fonction du nombre d'anomalies dans le dataset pour ne pas pénaliser l'algorithme
 
 
 
@@ -151,8 +154,8 @@ def dataset_test(merlin_score,best_params,time_taken,all_identified,key,idx,data
 
         with mutex:
             with open('abnormal_point_datasets.xlsx') as csv_file:
-                insertion(scoring_metric+"_discord_results.xlsx")
-                insertion("result/"+scoring_metric+"_"+key+"discord.xlsx")
+                insertion(f"{scoring_metric}_{key}_discord_results.xlsx")
+                insertion(f"{scoring_metric}_{key}_discord_results.xlsx")
                 csv_file.flush()
         return idx, best_param,time_taken_1, score, identified
     
@@ -187,7 +190,7 @@ def test (meth) :
                 time_taken = mgr.list([]) + list(np.zeros(len(base)))
                 best_params= mgr.list([]) +  ["params" for i in time_taken]
                 all_identified= mgr.list([]) + ["no" for i in time_taken]
-                output =pool.starmap(dataset_test, [(merlin_score,best_params,time_taken,all_identified,key,i,base["Dataset"][i],scoring) for i ,dataset in enumerate(base["Dataset"])  ] )
+                output =pool.starmap(dataset_test, [(merlin_score,best_params,time_taken,all_identified,key,i,base.loc[i,:],scoring) for i ,dataset in enumerate(base["Dataset"])  ] )
                 # print(f'Output: {output}')
                 print ("**** merlin score", [element[3] for element in output])
 

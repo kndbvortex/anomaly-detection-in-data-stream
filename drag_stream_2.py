@@ -61,8 +61,9 @@ class Cluster:
 
     def __repr__(self) -> str:
         return f"Cluster({self.items})"
+        
 
-    def add_item(self, sub_sequence: np.array, r: float) -> None:
+    def add_item(self, sub_sequence: np.array, dist_to_cluster: float) -> None:
         self.activity = datetime.now()
         already_exist = any(np.array_equal(sub_sequence, i) for i in self.items)
 
@@ -77,7 +78,7 @@ class Cluster:
             min_dist = dist_matrice[dist_matrice != 0].min()
             ij_min = np.where(dist_matrice == min_dist)[0]
             ij_min = tuple([i.item() for i in ij_min])
-            if r > min_dist:
+            if dist_to_cluster > min_dist:
                 self.items[ij_min[0]] = sub_sequence
                 
 
@@ -99,7 +100,9 @@ class ClusterSet:
     @property
     def clusters_activity(self) -> List[datetime]:
         return [c.activity for c in self.clusters]
-
+    
+    # def add_new_cluster(self, subsequence):
+    #     self.clusters[0].add_item(subsequence, self.r)
     def add_new_cluster(self, subsequence):
         print("New cluster !!!")
         if len(self.clusters) > self.max_clusters:
@@ -107,8 +110,19 @@ class ClusterSet:
                 min(self.clusters_activity))
             self.clusters.pop(min_index)
         self.clusters.append(Cluster(subsequence, self.p))
-
+        
     def clustering(self, subsequence) -> Tuple[bool, float]:
+        return self._clustering(subsequence)
+
+    def _clustering(self, subsequence) -> Tuple[bool, float]:
+        """
+
+        Args:
+            subsequence (np.array): _description_
+
+        Returns:
+            Tuple[bool, float]: 
+        """
         min_dist = float('inf')
         cluster_id = -1
         dist = self.r
@@ -123,8 +137,9 @@ class ClusterSet:
 
         # try to know if it can be the centroid
         if cluster_id != -1:
-            self.clusters[cluster_id].add_item(subsequence, self.r)
+            self.clusters[cluster_id].add_item(subsequence, min_dist)
             return True, min_dist
+        # if not return its distance to the nearest cluster
         else:
             return False, min_dist
 
@@ -155,10 +170,10 @@ class DragStream:
         for e in to_remove:
             S.remove(e)
         C = [S[0]]
-        clusters = ClusterSet(T[S[0]:S[0]+w], max_clusters, r)
+        clusters = ClusterSet(T[S[0]:S[0]+w], max_clusters, r, p=4)
         C_score = np.zeros(len(T))
         C_score[S[0]] = 0
-        # print(C)
+        
         for s in [i for i in S if i not in C]:
             isCandidate = True
             min_dist_if_discord = float('inf')
@@ -173,6 +188,7 @@ class DragStream:
                     isBeingClustered, _ = clusters.clustering(T[c:c+w])
                     if not isBeingClustered:
                         clusters.add_new_cluster(T[s:s+w])
+                        #clusters.clusters[0].add_item(T[s:s+w], dist_pseudo_discord_to_cluster)
                     isCandidate = False
                     # Normalement ici aussi on devrait l'ajouter au cluster mais le clustering n'est pas encore très bon et lui donner trop de responsabilité peut être difficile
             
@@ -191,13 +207,14 @@ class DragStream:
             if not isCandidate and not isBeingClustered:
                 print("***************************it's not entering any cluster")
                 clusters.add_new_cluster(T[s:s+w])
+                #clusters.clusters[0].add_item(T[s:s+w], min_dist_to_cluster)
 
         # S=[i for i in S if i not in C]
         #print(f'Fucking Scores: {np.unique(C_score)}, len: {T.shape} training: {training}, len(s): {len(S)}')
         return C, S, C_score, clusters.clusters
     
     @classmethod
-    def test(cls, dataset, X, right, nbr_anomalies, gap, scoring_metric="merlin"):
+    def test(cls, X, right, gap, max_training=None):
 
         def our(X: np.array, w:int, r, training:int, max_nb_cluster):
             # X should be a one dimensional vector
@@ -209,7 +226,6 @@ class DragStream:
             identified = np.where(scores.squeeze() == 1)[0]
             anomalies_detected = np.array([])
             ground_truth_anomalies = np.array([])
-            # gap = np.floor(len(scores)/100)
     
             for identify in identified:
                 anomalies_detected = np.concatenate([anomalies_detected, np.arange(identify, identify+gap)])
@@ -225,11 +241,9 @@ class DragStream:
                 score = 2*(recall*precision)/(recall+precision)
             except:
                 score = 0.0
-            print('gap', gap)
-            # print('Scores compute', score)
             return score
 
-        def score_to_label(nbr_anomalies, scores, gap):
+        def score_to_label(scores):
 
             thresholds = np.unique(scores)
             f1_scores = []
@@ -239,21 +253,22 @@ class DragStream:
             q = list(zip(f1_scores, thresholds))
             thres = sorted(q, reverse=True, key=lambda x: x[0])[0][1]
             threshold = thres
-            # arg = np.where(thresholds == thres)
-            # print(f'thresholds : {thresholds} thres: {thres}'.center(100, '$'))
-
-            # i will throw only real_indices here. [0 if i<threshold else 1 for i in scores ]
             return np.where(scores < threshold, 0, 1)
 
-        def objective(args):
-            scores = our(X, w=args["window"], r=args["threshold"], training=args["training"], max_nb_cluster=args["cluster"])
-            scores = score_to_label(nbr_anomalies, scores, gap)
+        def objective(kwargs):
+            scores = our(X, w=kwargs["window"], r=kwargs["threshold"], training=kwargs["training"], max_nb_cluster=kwargs["cluster"])
+            scores = score_to_label(scores)
             return -1*scoring(scores)
 
         possible_window = np.array([gap, gap])  # arange(100,gap+200)
         possible_threshold = np.arange(1, 2*np.sqrt(gap), 0.1)
-        right_discord = [int(discord) for discord in right]
-        possible_training = np.arange(100, min(min(right_discord), int(len(X)/4)))
+        right = right.astype(np.int64)
+        right_discord = [np.int64(discord) for discord in right]
+        if max_training == None:
+            possible_training = np.arange(100, min(min(right_discord), int(len(X)/4)))
+        else:
+            possible_training = np.arange(max_training//2, max_training)
+            
         possible_cluster = np.arange(10, 30)
         space2 = {
             "training": hp.choice("training_index", possible_training),
@@ -276,6 +291,9 @@ class DragStream:
         }
         scores = our(X, w=best_param["window"], r=best_param["threshold"],training=best_param["training"], max_nb_cluster=best_param["cluster"])
 
-        scores_label = score_to_label(nbr_anomalies, scores, gap)
+        scores_label = score_to_label(scores)
         identified =[key for key, val in enumerate(scores_label) if val in [1]] 
         return np.zeros(len(X)), scores_label, identified, scoring(scores_label), best_param, end-start
+    
+
+# {'cluster': 19, 'training': 102, 'window': 150, 'threshold': 8.300000000000006} score = 1 annGun
